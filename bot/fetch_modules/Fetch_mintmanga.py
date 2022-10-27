@@ -13,10 +13,7 @@ from bot.fetch_modules.FetchBase.utils import send_request_multiple
 
 
 class Fetch_1(FetchBase):
-    def __init__(self, _dict, message, bot):
-        self.dict = _dict
-        self.message = message
-        self.bot = bot
+    def __init__(self):
 
         self.endpoint_clear = 'https://mintmanga.live'
         self.endpoint = 'https://mintmanga.live/list?sortType=RATING&offset={}'
@@ -110,7 +107,7 @@ class Fetch_1(FetchBase):
             result = await send_request_multiple(session, self.endpoint.format(0))
             query = pq.PyQuery(result)
             item_count = int(list(query.find('.pagination > .step').items())[-1].text())
-            actual = 2
+            actual = 1
             loop = asyncio.get_running_loop()
             for i in range(0, 70 * actual, 70):
                 url = self.endpoint.format(i)

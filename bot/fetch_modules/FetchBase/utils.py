@@ -5,7 +5,7 @@ import logging
 async def send_request(session, url, response_type='text'):
     if response_type not in ('text', 'json'):
         return False
-    logging.info(f'sending: {url}')
+    logging.info(f'sending: {url.replace(" ", "%20")}')
     async with session.get(url) as response:
         if response.status == 200:
             if response_type == 'text':

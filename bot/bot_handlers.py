@@ -6,10 +6,11 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 
-from .bot_actions import add_user, default_running_dict, create_task_fetch
+from .bot_actions import add_user, default_running_dict, Fetches
 from .bot_buttons import get_start_keyboard, get_cancel_keyboard
 from .bot_core import dispatcher, bot, DEFAULT_USERS
 from .bot_decorators import login_required, login_required_state
+from .fetch_modules.Fetch_mintmanga import Fetch_1
 
 
 class States(StatesGroup):
@@ -77,7 +78,6 @@ async def add_by_user_id(message: types.Message, state: FSMContext):
 @dispatcher.message_handler(Text(equals='Все', ignore_case=True), state='*')
 @login_required
 async def method_call(message: types.Message):
-    global running
     all_operations = {
         'mintmanga.live': 1,
         'readmanga.io': 2,
@@ -95,5 +95,6 @@ async def method_call(message: types.Message):
         check_id = all_operations[message.text]
     user_id = message.from_user.id
 
-    result = await create_task_fetch(running, check_id, user_id, message, bot)
+    global running
+    result = await Fetches.create_task_fetch(running, check_id, user_id, message, bot)
     await message.reply(result)

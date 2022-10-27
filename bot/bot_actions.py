@@ -1,7 +1,4 @@
 import asyncio
-import requests
-import pyquery as pq
-
 
 from aiogram import types
 
@@ -36,45 +33,40 @@ def default_running_dict():
     return new_dict
 
 
-async def get_links_query(endpoint, _class) -> list:
-    response = requests.get(endpoint)
-    if response.status_code != 200:
-        return []
-    query = pq.PyQuery(response.text)
-    elements = query.find(_class).items()
-    return [elem.attr('href') for elem in elements]
+class Fetches:
+    @staticmethod
+    async def create_task_fetch(running, check_id, user_id, message: types.Message, bot) -> str:
+        if running[check_id]['is_running']:
+            if user_id not in running[check_id]['users']:
+                running[check_id]['users'].append(user_id)
+            return 'Проверка уже запущена. Вы получите файл по окончанию проверки'
 
+        operations = {
+            1: Fetches.fetch_1,
+            2: Fetches.fetch_2,
+        }
+        func = operations.get(check_id)
+        if not func:
+            return 'Неизвестная операция'
+        asyncio.create_task(func(check_id, message, bot, running))
+        running[check_id] = {
+            'is_running': True,
+            'users': [user_id, ]
+        }
+        return 'Проверка создана, вы получите результат по окончанию'
 
-async def fetch_1(_dict, message, bot):
-    class_fetch_1 = Fetch_1(_dict, message, bot)
-    result = await class_fetch_1.execute()
-    _dict['is_running'] = False
-    _dict['users'] = []
-    if not result:
-        await message.reply('При проверке mintmanga произошла ошибка, попробуйте ещё раз.')
+    @staticmethod
+    async def fetch_1(check_id, message, bot, running):
+        class_fetch_1 = Fetch_1()
+        result = await class_fetch_1.execute()
+        if not result:
+            await message.reply('При проверке mintmanga произошла ошибка, попробуйте ещё раз.')
+            return
+        for user_id in running[check_id]['users']:
+            await bot.send_message(user_id, 'complete')
+        running[check_id]['is_running'] = False
+        running[check_id]['users'] = []
 
-
-async def fetch_2(_dict, message, bot):
-    pass
-
-
-async def create_task_fetch(_dict, check_id, user_id, message: types.Message, bot, ) -> str:
-    if _dict[check_id]['is_running']:
-        if user_id not in _dict[check_id]['users']:
-            _dict[check_id]['users'].append(user_id)
-        return 'Проверка уже запущена. Вы получите файл по окончанию проверки'
-
-    operations = {
-        1: fetch_1,
-        2: fetch_2,
-    }
-    func = operations.get(check_id)
-    if not func:
-        return 'Неизвестная операция'
-    asyncio.create_task(func(_dict, message, bot))
-    _dict[check_id] = {
-        'is_running': True,
-        'users': [user_id, ]
-    }
-    return 'Проверка создана, вы получите результат по окончанию'
-
+    @staticmethod
+    async def fetch_2(check_id, message, bot, running):
+        pass
