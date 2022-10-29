@@ -10,7 +10,6 @@ from .bot_actions import add_user, default_running_dict, Fetches
 from .bot_buttons import get_start_keyboard, get_cancel_keyboard
 from .bot_core import dispatcher, bot, DEFAULT_USERS
 from .bot_decorators import login_required, login_required_state
-from .fetch_modules.Fetch_mintmanga import Fetch_1
 
 
 class States(StatesGroup):
@@ -68,7 +67,7 @@ async def add_by_user_id(message: types.Message, state: FSMContext):
 @dispatcher.message_handler(commands='/fetch_8', state='*')
 @dispatcher.message_handler(commands='/fetch_9', state='*')
 @dispatcher.message_handler(Text(equals='mintmanga.live', ignore_case=True), state='*')
-@dispatcher.message_handler(Text(equals='readmanga.io', ignore_case=True), state='*')
+@dispatcher.message_handler(Text(equals='readmanga.live', ignore_case=True), state='*')
 @dispatcher.message_handler(Text(equals='mangalib.me', ignore_case=True), state='*')
 @dispatcher.message_handler(Text(equals='yaoilib.me', ignore_case=True), state='*')
 @dispatcher.message_handler(Text(equals='newmanga.org', ignore_case=True), state='*')
@@ -80,7 +79,7 @@ async def add_by_user_id(message: types.Message, state: FSMContext):
 async def method_call(message: types.Message):
     all_operations = {
         'mintmanga.live': 1,
-        'readmanga.io': 2,
+        'readmanga.live': 2,
         'mangalib.me': 3,
         'yaoilib.me': 4,
         'newmanga.org': 5,
@@ -94,7 +93,6 @@ async def method_call(message: types.Message):
     else:
         check_id = all_operations[message.text]
     user_id = message.from_user.id
-
     global running
-    result = await Fetches.create_task_fetch(running, check_id, user_id, message, bot)
+    result = await Fetches.create_task_fetch(running, check_id, user_id, bot)
     await message.reply(result)

@@ -1,4 +1,6 @@
-headers = {
-            'User-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
-                          '(KHTML, like Gecko) Chrome/102.0.5005.63 Safari/537.36'
-        }
+from .Fetch_mintmanga import Fetch_mintmanga
+from .Fetch_readmanga import Fetch_readmanga
+from .Fetch_mangalib import Fetch_mangalib
+from .Fetch_yaoilib import Fetch_yaoilib
+from .Fetch_newmanga import Fetch_newmanga
+

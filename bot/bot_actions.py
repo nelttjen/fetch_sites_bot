@@ -3,7 +3,7 @@ import asyncio
 from aiogram import types
 
 from .bot_core import DEFAULT_USERS
-from .fetch_modules.Fetch_mintmanga import Fetch_1
+from .fetch_modules import *
 
 
 def add_user(new_user: int) -> None:
@@ -35,7 +35,7 @@ def default_running_dict():
 
 class Fetches:
     @staticmethod
-    async def create_task_fetch(running, check_id, user_id, message: types.Message, bot) -> str:
+    async def create_task_fetch(running, check_id, user_id, bot) -> str:
         if running[check_id]['is_running']:
             if user_id not in running[check_id]['users']:
                 running[check_id]['users'].append(user_id)
@@ -44,11 +44,14 @@ class Fetches:
         operations = {
             1: Fetches.fetch_1,
             2: Fetches.fetch_2,
+            # 3: Fetches.fetch_3,
+            # 4: Fetches.fetch_4,
+            5: Fetches.fetch_5,
         }
         func = operations.get(check_id)
         if not func:
             return 'Неизвестная операция'
-        asyncio.create_task(func(check_id, message, bot, running))
+        asyncio.create_task(func(check_id, bot, running))
         running[check_id] = {
             'is_running': True,
             'users': [user_id, ]
@@ -56,17 +59,36 @@ class Fetches:
         return 'Проверка создана, вы получите результат по окончанию'
 
     @staticmethod
-    async def fetch_1(check_id, message, bot, running):
-        class_fetch_1 = Fetch_1()
-        result = await class_fetch_1.execute()
+    async def fetch_base(check_id, bot, running, __class, name=''):
+        fetch_task = __class(bot, running, check_id)
+        result = await fetch_task.execute()
         if not result:
-            await message.reply('При проверке mintmanga произошла ошибка, попробуйте ещё раз.')
+            for user in running[check_id]['users']:
+                await bot.send_message(user, f'При проверке {name} произошла ошибка, попробуйте ещё раз')
             return
-        for user_id in running[check_id]['users']:
-            await bot.send_message(user_id, 'complete')
         running[check_id]['is_running'] = False
         running[check_id]['users'] = []
 
     @staticmethod
-    async def fetch_2(check_id, message, bot, running):
-        pass
+    async def fetch_1(check_id, bot, running):
+        await Fetches.fetch_base(check_id, bot, running, Fetch_mintmanga, name='mintmanga')
+
+    @staticmethod
+    async def fetch_2(check_id, bot, running):
+        await Fetches.fetch_base(check_id, bot, running, Fetch_readmanga, name='readmanga')
+
+    @staticmethod
+    async def fetch_3(check_id, bot, running):
+        """TODO: mangalib CloudFlare protection, through non-async selenium"""
+        return
+        await Fetches.fetch_base(check_id, bot, running, Fetch_mangalib, name='mangalib')
+
+    @staticmethod
+    async def fetch_4(check_id, bot, running):
+        """TODO: yaoillib CloudFlare protection, through non-async selenium"""
+        return
+        await Fetches.fetch_base(check_id, bot, running, Fetch_yaoilib, name='yaoilib')
+
+    @staticmethod
+    async def fetch_5(check_id, bot, running):
+        await Fetches.fetch_base(check_id, bot, running, Fetch_newmanga, name='newmanga')

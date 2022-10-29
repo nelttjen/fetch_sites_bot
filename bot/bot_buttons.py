@@ -7,7 +7,7 @@ def get_start_keyboard():
     keyb.add(button)
 
     row_1_button_1 = types.KeyboardButton('mintmanga.live')
-    row_1_button_2 = types.KeyboardButton('readmanga.io')
+    row_1_button_2 = types.KeyboardButton('readmanga.live')
     row_1_button_3 = types.KeyboardButton('mangalib.me')
     row_2_button_1 = types.KeyboardButton('yaoilib.me')
     row_2_button_2 = types.KeyboardButton('newmanga.org')
