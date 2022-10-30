@@ -106,7 +106,7 @@ class Fetch_newmanga(FetchBase):
         async with aiohttp.ClientSession(headers=headers) as session:
             for item in self.api_items:
                 asyncio.create_task(self.proceed_remanga(item, session))
-                await asyncio.sleep(0.1)
+                await asyncio.sleep(0.5)
             while self.completed != len(self.api_items):
                 await asyncio.sleep(3)
         logging.info(f'FETCH {self.fetch_name.upper()}: run stage complete')
@@ -118,12 +118,3 @@ class Fetch_newmanga(FetchBase):
                         orig_key='title_og', chap_key='chapters', re_items_key='remanga')
         logging.info(f'FETCH {self.fetch_name.upper()}: complete stage complete')
 
-    async def execute(self):
-        try:
-            await self.prepare()
-            await self.run()
-            await self.complete()
-            return True
-        except Exception as e:
-            logging.critical(f'FETCH NEWMANGA: FAILED, {e}')
-            return False

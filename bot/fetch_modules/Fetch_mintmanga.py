@@ -148,12 +148,12 @@ class Fetch_mintmanga(FetchBase):
                         chap_key='max_chapter', re_items_key='remanga_data')
         logging.info(f'FETCH {self.fetch_name.upper()}: complete stage complete')
 
-    async def execute(self):
-        try:
-            await self.prepare()
-            await self.run()
-            await self.complete()
-            return True
-        except Exception as e:
-            logging.critical(f'FETCH {self.fetch_name.upper()}: FAILED, {e}')
-            return False
+    # async def execute(self):
+    #     try:
+    #         await self.prepare()
+    #         await self.run()
+    #         await self.complete()
+    #         return True
+    #     except Exception as e:
+    #         logging.critical(f'FETCH {self.fetch_name.upper()}: FAILED, {e}')
+    #         return False

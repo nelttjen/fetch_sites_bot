@@ -47,6 +47,7 @@ class Fetches:
             # 3: Fetches.fetch_3,
             # 4: Fetches.fetch_4,
             5: Fetches.fetch_5,
+            6: Fetches.fetch_6,
         }
         func = operations.get(check_id)
         if not func:
@@ -60,7 +61,7 @@ class Fetches:
 
     @staticmethod
     async def fetch_base(check_id, bot, running, __class, name=''):
-        fetch_task = __class(bot, running, check_id)
+        fetch_task = __class(bot=bot, running=running, check_id=check_id)
         result = await fetch_task.execute()
         if not result:
             for user in running[check_id]['users']:
@@ -92,3 +93,8 @@ class Fetches:
     @staticmethod
     async def fetch_5(check_id, bot, running):
         await Fetches.fetch_base(check_id, bot, running, Fetch_newmanga, name='newmanga')
+
+    @staticmethod
+    async def fetch_6(check_id, bot, running):
+        """TODO: mangachan were unavailable + cloudflare detected"""
+        await Fetches.fetch_base(check_id, bot, running, Fetch_mangachan, name='mangachan')

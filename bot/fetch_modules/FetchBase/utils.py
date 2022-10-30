@@ -50,7 +50,7 @@ async def send_request_multiple(session, url, tries=5, sleep=120, response_type=
 async def send_data(output, running, check_id, bot, fetch_name,
                     ru_key, en_key, orig_key, chap_key,
                     re_items_key):
-    first_row = ['Русс название', 'Англ название', 'Ориг название', 'Глав mintmanga', 'Глав Remanga',
+    first_row = ['Русс название', 'Англ название', 'Ориг название', f'Глав {fetch_name}', 'Глав Remanga',
                  'Название Remanga', 'ID Remanga', 'DIR remanga']
     rows = [first_row, ]
     for item in output:

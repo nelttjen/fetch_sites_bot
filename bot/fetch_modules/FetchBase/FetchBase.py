@@ -1,3 +1,4 @@
+import logging
 from abc import abstractmethod, ABC
 
 
@@ -15,8 +16,14 @@ class FetchBase(ABC):
     async def complete(self):
         pass
 
-    @abstractmethod
     async def execute(self):
-        pass
+        try:
+            await self.prepare()
+            await self.run()
+            await self.complete()
+            return True
+        except Exception as e:
+            logging.critical(f'FETCH {self.fetch_name.upper()}: FAILED, Error message: {e}')
+            return False
 
 
