@@ -1,5 +1,7 @@
 import asyncio
+import csv
 import logging
+import os
 
 headers = {
             'User-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
@@ -30,7 +32,7 @@ async def send_request(session, url, response_type='text', method='get', post_pa
 
 
 async def send_request_multiple(session, url, tries=5, sleep=120, response_type='text',
-                                method='get', post_payload=None) -> str:
+                                method='get', post_payload=None):
     __count = 0
 
     result = await send_request(session, url, response_type=response_type, method=method, post_payload=post_payload)
@@ -43,3 +45,34 @@ async def send_request_multiple(session, url, tries=5, sleep=120, response_type=
     if __count >= 5:
         result = ''
     return result
+
+
+async def send_data(output, running, check_id, bot, fetch_name,
+                    ru_key, en_key, orig_key, chap_key,
+                    re_items_key):
+    first_row = ['Русс название', 'Англ название', 'Ориг название', 'Глав mintmanga', 'Глав Remanga',
+                 'Название Remanga', 'ID Remanga', 'DIR remanga']
+    rows = [first_row, ]
+    for item in output:
+        ru_name = item[ru_key].replace(',', '').replace(';', '')
+        en_name = item[en_key].replace(',', '').replace(';', '')
+        orig_name = item[orig_key].replace(',', '').replace(';', '')
+        mint_chaps = item[chap_key]
+        for re_item in item[re_items_key]:
+            re_chaps = re_item['chapters']
+            re_title_eng = re_item['title_eng'].replace(',', '').replace(';', '')
+            re_title_id = re_item['title_id']
+            re_title_dir = 'https://remanga.org/manga/' + re_item['dir']
+            rows.append([ru_name, en_name, orig_name, mint_chaps,
+                         re_chaps, re_title_eng, re_title_id, re_title_dir])
+    logging.info(f'Saving data to output_{fetch_name}.csv...')
+    with open(f'output_{fetch_name}.csv', 'w', encoding='utf-8') as mint_out:
+        writer = csv.writer(mint_out, delimiter=';')
+        writer.writerows(rows)
+    logging.info('Data saved, sending document to users...')
+    for user_id in running[check_id]['users']:
+        await bot.send_message(user_id, f'Проверка {fetch_name} завершена, отправка файла...')
+        await bot.send_document(user_id, open(f'output_{fetch_name}.csv', 'rb'))
+    logging.info('Send complete, deleting file...')
+    os.remove(f'output_{fetch_name}.csv')
+    logging.info('Done')

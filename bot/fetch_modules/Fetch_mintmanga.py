@@ -7,7 +7,7 @@ import copy
 import logging
 import pyquery as pq
 
-from .FetchBase.utils import headers, DEBUG
+from .FetchBase.utils import headers, DEBUG, send_data
 from bot.fetch_modules.FetchBase.FetchBase import FetchBase
 from bot.fetch_modules.FetchBase.ReManga import ReManga
 from bot.fetch_modules.FetchBase.utils import send_request_multiple
@@ -143,32 +143,9 @@ class Fetch_mintmanga(FetchBase):
 
     async def complete(self):
         logging.info(f'FETCH {self.fetch_name.upper()}: complete stage start')
-        first_row = ['Русс название', 'Англ название', 'Ориг название', 'Глав mintmanga', 'Глав Remanga',
-                     'Название Remanga', 'ID Remanga', 'DIR remanga']
-        rows = [first_row, ]
-        for item in self.output:
-            ru_name = item['ru_title'].replace(',', '').replace(';', '')
-            en_name = item['en_title'].replace(',', '').replace(';', '')
-            orig_name = item['orig_title'].replace(',', '').replace(';', '')
-            mint_chaps = item['max_chapter']
-            for re_item in item['remanga_data']:
-                re_chaps = re_item['chapters']
-                re_title_eng = re_item['title_eng'].replace(',', '').replace(';', '')
-                re_title_id = re_item['title_id']
-                re_title_dir = 'https://remanga.org/manga/' + re_item['dir']
-                rows.append([ru_name, en_name, orig_name, mint_chaps,
-                             re_chaps, re_title_eng, re_title_id, re_title_dir])
-        logging.info(f'Saving data to output_{self.fetch_name}.csv...')
-        with open(f'output_{self.fetch_name}.csv', 'w', encoding='utf-8') as mint_out:
-            writer = csv.writer(mint_out, delimiter=';')
-            writer.writerows(rows)
-        logging.info('Data saved, sending document to users...')
-        for user_id in self.running[self.check_id]['users']:
-            await self.bot.send_message(user_id, f'Проверка {self.fetch_name} завершена, отправка файла...')
-            await self.bot.send_document(user_id, open(f'output_{self.fetch_name}.csv', 'rb'))
-        logging.info('Send complete, deleting file...')
-        os.remove(f'output_{self.fetch_name}.csv')
-        logging.info('Done')
+        await send_data(self.output, self.running, self.check_id, self.bot, self.fetch_name,
+                        ru_key='ru_title', en_key='en_title', orig_key='orig_title',
+                        chap_key='max_chapter', re_items_key='remanga_data')
         logging.info(f'FETCH {self.fetch_name.upper()}: complete stage complete')
 
     async def execute(self):
