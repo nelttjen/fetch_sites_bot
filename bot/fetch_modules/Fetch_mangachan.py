@@ -98,7 +98,6 @@ class Fetch_mangachan(FetchBase):
 
     async def complete(self):
         logging.info(f'FETCH {self.fetch_name.upper()}: complete stage start')
-        print(self.re_diff_items)
         await send_data(self.re_diff_items, self.running, self.check_id, self.bot,
                         self.fetch_name, ru_key='title_ru', en_key='title_en', orig_key='title_og',
                         chap_key='chapter', re_items_key='remanga')
