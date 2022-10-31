@@ -94,5 +94,12 @@ async def method_call(message: types.Message):
         check_id = all_operations[message.text]
     user_id = message.from_user.id
     global running
-    result = await Fetches.create_task_fetch(running, check_id, user_id, bot)
-    await message.reply(result)
+    if check_id == 9:
+        for key, val in all_operations.items():
+            if val == 9 or val in [3, 4]:
+                continue
+            result = await Fetches.create_task_fetch(running, val, user_id, bot, name=key)
+            await message.reply(result)
+    else:
+        result = await Fetches.create_task_fetch(running, check_id, user_id, bot)
+        await message.reply(result)

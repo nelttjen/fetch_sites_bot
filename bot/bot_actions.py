@@ -35,11 +35,11 @@ def default_running_dict():
 
 class Fetches:
     @staticmethod
-    async def create_task_fetch(running, check_id, user_id, bot) -> str:
+    async def create_task_fetch(running, check_id, user_id, bot, name="") -> str:
         if running[check_id]['is_running']:
             if user_id not in running[check_id]['users']:
                 running[check_id]['users'].append(user_id)
-            return 'Проверка уже запущена. Вы получите файл по окончанию проверки'
+            return f'Проверка {name} уже запущена. Вы получите файл по окончанию проверки'
 
         operations = {
             1: Fetches.fetch_1,
@@ -48,16 +48,18 @@ class Fetches:
             # 4: Fetches.fetch_4,
             5: Fetches.fetch_5,
             6: Fetches.fetch_6,
+            7: Fetches.fetch_7,
+            8: Fetches.fetch_8,
         }
         func = operations.get(check_id)
         if not func:
-            return 'Неизвестная операция'
+            return f'{name} - Неизвестная операция'
         asyncio.create_task(func(check_id, bot, running))
         running[check_id] = {
             'is_running': True,
             'users': [user_id, ]
         }
-        return 'Проверка создана, вы получите результат по окончанию'
+        return f'Проверка {name} создана, вы получите результат по окончанию'
 
     @staticmethod
     async def fetch_base(check_id, bot, running, __class, name=''):
@@ -96,5 +98,12 @@ class Fetches:
 
     @staticmethod
     async def fetch_6(check_id, bot, running):
-        """TODO: mangachan were unavailable + cloudflare detected"""
         await Fetches.fetch_base(check_id, bot, running, Fetch_mangachan, name='mangachan')
+
+    @staticmethod
+    async def fetch_7(check_id, bot, running):
+        await Fetches.fetch_base(check_id, bot, running, Fetch_mangahub, name='mangachan')
+
+    @staticmethod
+    async def fetch_8(check_id, bot, running):
+        await Fetches.fetch_base(check_id, bot, running, Fetch_mangaovh, name='mangachan')

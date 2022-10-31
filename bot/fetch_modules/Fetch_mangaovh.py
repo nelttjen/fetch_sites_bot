@@ -2,63 +2,73 @@ import asyncio
 import copy
 import logging
 import aiohttp
-import pyquery as pq
+import pyquery
 
 from .FetchBase.FetchBase import FetchBase
+from .FetchBase.utils import DEBUG, send_request_multiple, send_data, headers
 from .FetchBase.ReManga import ReManga
-from .FetchBase.utils import send_request_multiple, DEBUG, headers, send_data
 
 
-class Fetch_mangachan(FetchBase):
+class Fetch_mangaovh(FetchBase):
     def __init__(self, bot, running, check_id):
         self.running = running
         self.check_id = check_id
         self.bot = bot
 
-        self.fetch_name = 'mangachan'
-        self.endpoint = 'https://manga-chan.me/mostfavorites?offset={}'
+        self.fetch_name = 'mangaovh'
+        self.endpoint = 'https://api.manga.ovh/book/catalog'
+        self.endpoint_not_api = 'https://manga.ovh/manga/{}'
+        self.payload = {
+            "pagination": {
+                "page": 0,
+                "size": 100000 if not DEBUG else 20
+            },
+            "sort": {
+                "field": "VIEWS_COUNT",
+                "order": "DESC"
+            },
+            "where": {
+                "longStrip": None,
+                "type": "COMIC"
+            }
+        }
+
         self.accuracy = 0.65
 
-        self.count = 0
         self.prepare_count = 0
         self.prepare_items = []
 
-        self.re_diff_items = []
         self.fetches = 0
+        self.re_diff_items = []
 
-    async def make_prepare(self, endpoint, session):
+    async def process_prepare(self, session, item):
         try:
-            result = await send_request_multiple(session, endpoint)
-            if not result or not await self.process_result(result):
-                logging.error(f'FETCH {self.fetch_name.upper()}: {endpoint} - failed, skipping')
+            link = self.endpoint_not_api.format(item['id'])
+            result = await send_request_multiple(session, link)
+            query = pyquery.PyQuery(result)
+            res = list(query.find('script').items())[-1].text().split('branches')[1] \
+            .replace('":[{"id":"', '').split('"')[0]
+            ru_name = item["name"].get('ru') or ''
+            en_name = item["name"].get('en') or ''
+            og_name = item["name"].get('original') or ''
+            result_2 = await send_request_multiple(session, f"https://api.manga.ovh/branch/{res}/chapters",
+                                                   response_type='json')
+            chapters = len(result_2)
+            self.prepare_items.append({
+                'title_ru': ru_name,
+                'title_en': en_name,
+                'title_og': og_name,
+                'chapters': chapters
+            })
         except Exception as e:
-            logging.error(f'FETCH {self.fetch_name.upper()}: {endpoint} - failed, skipping, ERROR: {e}')
+            logging.error(f'{item["name"]["ru"]}: error, skipping, message: {e}')
         finally:
             self.prepare_count += 1
-
-    async def process_result(self, result):
-        try:
-            query = pq.PyQuery(result)
-            items = list(query.find('.content_row').items())
-            for item in items:
-                names = item.find('a.title_link').text()
-                name_en = names.split('(')[0].strip().replace("'s", '')
-                name_ru = names.split('(')[1].replace(')', '')
-                chapter = int(item.find('.item2 > span > b').text().replace(' глав', ''))
-                self.prepare_items.append({
-                    'title_ru': name_ru,
-                    'title_en': name_en,
-                    'title_og': '',
-                    'chapter': chapter
-                })
-            return True
-        except:
-            return False
 
     async def proceed_remanga(self, item, sesssion):
         try:
             name = item.get('title_en')
-            chapter = item.get('chapter')
+            chapter = item.get('chapters')
             re_query = await ReManga.find_remanga(name, sesssion)
             re_items = await ReManga.compare_remanga_reverse(name, chapter, re_query, required_rating=self.accuracy)
             if re_items:
@@ -71,19 +81,14 @@ class Fetch_mangachan(FetchBase):
     async def prepare(self):
         logging.info(f'FETCH {self.fetch_name.upper()}: prepare stage start')
         async with aiohttp.ClientSession(headers=headers) as session:
-            text = await send_request_multiple(session, self.endpoint.format(0))
-            q_len = pq.PyQuery(text)
-            try:
-                loop_len = int(list(q_len.find('#pagination > span > a').items())[-1].text()) * 20 or 40000
-            except:
-                loop_len = 40000
-            logging.info(loop_len)
-            for i in range(0, loop_len if not DEBUG else 20, 20):
+            all_titles = await send_request_multiple(session, self.endpoint, response_type='json', method='post',
+                                                     post_payload=self.payload)
+            for item in all_titles:
+                asyncio.create_task(self.process_prepare(session, item))
                 await asyncio.sleep(0.5)
-                asyncio.create_task(self.make_prepare(self.endpoint.format(i), session))
-                self.count += 1
-            while self.prepare_count < self.count:
+            while self.prepare_count < len(all_titles):
                 await asyncio.sleep(3)
+
         logging.info(f'FETCH {self.fetch_name.upper()}: prepare stage complete')
 
     async def run(self):
@@ -98,8 +103,7 @@ class Fetch_mangachan(FetchBase):
 
     async def complete(self):
         logging.info(f'FETCH {self.fetch_name.upper()}: complete stage start')
-        print(self.re_diff_items)
         await send_data(self.re_diff_items, self.running, self.check_id, self.bot,
                         self.fetch_name, ru_key='title_ru', en_key='title_en', orig_key='title_og',
-                        chap_key='chapter', re_items_key='remanga')
+                        chap_key='chapters', re_items_key='remanga')
         logging.info(f'FETCH {self.fetch_name.upper()}: complete stage complete')

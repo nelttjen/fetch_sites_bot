@@ -77,8 +77,6 @@ class Fetch_mintmanga(FetchBase):
             else:
                 raise Exception('No result were got from server')
         except Exception as e:
-            for chap in chapters:
-                print(chap)
             logging.error(f'{url} fetching - error, skipping. Error: {e}')
             self.fetches += 1
 
@@ -98,7 +96,7 @@ class Fetch_mintmanga(FetchBase):
 
     @staticmethod
     async def proceed_remanga_reverse(item, session, rating=0.51):
-        title = item['en_title'] or item['orig_title'] or item['ru_title']
+        title = item['en_title']
         max_chap = item['max_chapter']
         find_result = await ReManga.find_remanga(title, session)
         proceed_result = await ReManga.compare_remanga_reverse(title, max_chap, find_result, required_rating=rating)

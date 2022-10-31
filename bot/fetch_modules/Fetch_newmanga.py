@@ -62,7 +62,7 @@ class Fetch_newmanga(FetchBase):
         self.diff_items = []
 
     async def proceed_remanga(self, item, session):
-        query = item.get('title_og') or item.get('title_en') or item.get('title_ru')
+        query = item.get('title_en')
         try:
             remanga_query = await ReManga.find_remanga(query, session)
             remanga_result = await ReManga.compare_remanga_reverse(query, item.get('chapters'), remanga_query,

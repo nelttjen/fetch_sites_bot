@@ -70,6 +70,7 @@ async def send_data(output, running, check_id, bot, fetch_name,
         writer = csv.writer(mint_out, delimiter=';')
         writer.writerows(rows)
     logging.info('Data saved, sending document to users...')
+    print(check_id, running, running[check_id])
     for user_id in running[check_id]['users']:
         await bot.send_message(user_id, f'Проверка {fetch_name} завершена, отправка файла...')
         await bot.send_document(user_id, open(f'output_{fetch_name}.csv', 'rb'))
