@@ -14,3 +14,8 @@ storage = MemoryStorage()
 dispatcher = Dispatcher(bot, storage=storage)
 
 DEFAULT_USERS = '474761641'
+
+DRIVER_EXECUTABLE_PATH_LINUX = "driver/chromedriver"
+DRIVER_EXECUTABLE_PATH_WINDOWS = "driver/chromedriver.exe"
+
+DRIVER_EXECUTABLE_PATH = DRIVER_EXECUTABLE_PATH_LINUX

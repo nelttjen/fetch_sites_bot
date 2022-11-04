@@ -8,7 +8,7 @@ from selenium.webdriver.common.by import By
 from .FetchBase.ReManga import ReManga
 from .FetchBase.FetchBase import FetchBase
 from .FetchBase.utils import DEBUG, headers, send_data
-
+from bot.bot_core import DRIVER_EXECUTABLE_PATH
 
 class Fetch_mangalib(FetchBase):
     def _is_exist_page(self):
@@ -90,7 +90,7 @@ class Fetch_mangalib(FetchBase):
             # opts.add_experimental_option("excludeSwitches", ["ignore-certificate-errors"])
             # opts.add_argument('headless')
             # opts.add_argument('window-size=0x0')
-            self.driver = Chrome(executable_path="driver/chromedriver", chrome_options=opts)
+            self.driver = Chrome(executable_path=DRIVER_EXECUTABLE_PATH, chrome_options=opts)
             self.error = False
         except:
             self.error = True
