@@ -7,13 +7,16 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
 
 from .bot_actions import add_user, default_running_dict, Fetches
-from .bot_buttons import get_start_keyboard, get_cancel_keyboard
+from .bot_buttons import get_start_keyboard, get_cancel_keyboard, get_agree_keyboard
 from .bot_core import dispatcher, bot, DEFAULT_USERS
 from .bot_decorators import login_required, login_required_state
 
 
 class States(StatesGroup):
     id_wait = State()
+
+    mangalib = State()
+    yaoilib = State()
 
 
 running = default_running_dict()
@@ -93,6 +96,18 @@ async def method_call(message: types.Message):
     else:
         check_id = all_operations[message.text]
     user_id = message.from_user.id
+
+    if check_id in (3, 4):
+        state = States.mangalib if check_id == 3 else States.yaoilib
+        await message.reply(f'Вы уверены, что хотите запустить проверку {message.text}? '
+                            f'Во время выполнения бот может подвисать и долго не реагировать на сообщения.'
+                            f'Проверка происходит драйвером Chrome, проверьте, чтобы он был установлен и помещен в '
+                            f'корень приложения в папку driver. Драйвер запускается в headless режиме, окно браузера '
+                            f'не будет создано, вы можете продолжать пользоваться компьютером',
+                            reply_markup=get_agree_keyboard())
+        await state.set()
+        return
+
     global running
     if check_id == 9:
         for key, val in all_operations.items():
@@ -101,5 +116,33 @@ async def method_call(message: types.Message):
             result = await Fetches.create_task_fetch(running, val, user_id, bot, name=key)
             await message.reply(result)
     else:
-        result = await Fetches.create_task_fetch(running, check_id, user_id, bot)
+        result = await Fetches.create_task_fetch(running, check_id, user_id, bot, name=message.text)
         await message.reply(result)
+
+
+@dispatcher.message_handler(state=States.mangalib)
+@login_required_state
+async def execute_mangalib(message: types.Message, state: FSMContext):
+    if message.text not in ('Подтвердить', 'Вернуться назад'):
+        await message.reply('Неизвестная операция')
+        return
+    if message.text == 'Вернуться назад':
+        await message.reply('Главное меню', reply_markup=get_start_keyboard())
+        return
+    await state.finish()
+    result = await Fetches.create_task_fetch(running, 3, message.from_user.id, bot, name='mangalib.me')
+    await message.reply(result, reply_markup=get_start_keyboard())
+
+
+@dispatcher.message_handler(state=States.yaoilib)
+@login_required_state
+async def execute_mangalib(message: types.Message, state: FSMContext):
+    if message.text not in ('Подтвердить', 'Вернуться назад'):
+        await message.reply('Неизвестная операция')
+        return
+    if message.text == 'Вернуться назад':
+        await message.reply('Главное меню', reply_markup=get_start_keyboard())
+        return
+    await state.finish()
+    result = await Fetches.create_task_fetch(running, 4, message.from_user.id, bot, name='yaoilib.me')
+    await message.reply(result, reply_markup=get_start_keyboard())

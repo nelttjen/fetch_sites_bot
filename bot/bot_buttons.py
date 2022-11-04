@@ -23,6 +23,13 @@ def get_start_keyboard():
     return keyb
 
 
+def get_agree_keyboard():
+    button1 = types.KeyboardButton('Подтвердить')
+    button2 = types.KeyboardButton('Вернуться назад')
+    keyb = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    keyb.row(button1, button2)
+    return keyb
+
 def get_cancel_keyboard():
     keyb = types.ReplyKeyboardMarkup(resize_keyboard=True)
     cancel = types.KeyboardButton('Отмена')

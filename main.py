@@ -2,7 +2,6 @@ import logging
 import os
 
 from aiogram import executor
-
 from bot.bot_core import dispatcher, DEFAULT_USERS
 
 

@@ -44,8 +44,8 @@ class Fetches:
         operations = {
             1: Fetches.fetch_1,
             2: Fetches.fetch_2,
-            # 3: Fetches.fetch_3,
-            # 4: Fetches.fetch_4,
+            3: Fetches.fetch_3,
+            4: Fetches.fetch_4,
             5: Fetches.fetch_5,
             6: Fetches.fetch_6,
             7: Fetches.fetch_7,
@@ -83,13 +83,11 @@ class Fetches:
     @staticmethod
     async def fetch_3(check_id, bot, running):
         """TODO: mangalib CloudFlare protection, through non-async selenium"""
-        return
         await Fetches.fetch_base(check_id, bot, running, Fetch_mangalib, name='mangalib')
 
     @staticmethod
     async def fetch_4(check_id, bot, running):
         """TODO: yaoillib CloudFlare protection, through non-async selenium"""
-        return
         await Fetches.fetch_base(check_id, bot, running, Fetch_yaoilib, name='yaoilib')
 
     @staticmethod
