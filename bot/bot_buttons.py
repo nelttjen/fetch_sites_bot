@@ -14,11 +14,15 @@ def get_start_keyboard():
     row_2_button_3 = types.KeyboardButton('mangachan.ru')
     row_3_button_1 = types.KeyboardButton('mangahub.ru')
     row_3_button_2 = types.KeyboardButton('manga.ovh')
-    row_3_button_3 = types.KeyboardButton('Все')
+    row_3_button_3 = types.KeyboardButton('hentailib.me')
+    row_4_button_1 = types.KeyboardButton('shikimori.one')
+    row_5_button_1 = types.KeyboardButton('Все')
 
     keyb.row(row_1_button_1, row_1_button_2, row_1_button_3)
     keyb.row(row_2_button_1, row_2_button_2, row_2_button_3)
     keyb.row(row_3_button_1, row_3_button_2, row_3_button_3)
+    keyb.row(row_4_button_1)
+    keyb.row(row_5_button_1)
 
     return keyb
 

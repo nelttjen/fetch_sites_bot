@@ -1,5 +1,7 @@
 from aiogram import Bot, Dispatcher
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from os import path
+from pathlib import Path
 
 try:
     with open('token.txt', 'r', encoding='utf-8') as token_f:
@@ -13,9 +15,10 @@ bot = Bot(token=data)
 storage = MemoryStorage()
 dispatcher = Dispatcher(bot, storage=storage)
 
-DEFAULT_USERS = '474761641'
+DEFAULT_USERS = '869415947'
 
 DRIVER_EXECUTABLE_PATH_LINUX = "driver/chromedriver"
-DRIVER_EXECUTABLE_PATH_WINDOWS = "driver/chromedriver.exe"
+DRIVER_EXECUTABLE_PATH_WINDOWS = path.join(Path(__file__).parents[1], 'driver', 'chromedriver.exe')
+print(DRIVER_EXECUTABLE_PATH_WINDOWS)
 
-DRIVER_EXECUTABLE_PATH = DRIVER_EXECUTABLE_PATH_LINUX
+DRIVER_EXECUTABLE_PATH = DRIVER_EXECUTABLE_PATH_WINDOWS

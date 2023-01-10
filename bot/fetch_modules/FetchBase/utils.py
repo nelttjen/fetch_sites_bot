@@ -48,25 +48,17 @@ async def send_request_multiple(session, url, tries=5, sleep=120, response_type=
 
 
 async def send_data(output, running, check_id, bot, fetch_name,
-                    ru_key, en_key, orig_key, chap_key,
-                    re_items_key):
-    first_row = ['Русс название', 'Англ название', 'Ориг название', f'Глав {fetch_name}', 'Глав Remanga',
-                 'Название Remanga', 'ID Remanga', 'DIR remanga']
+                    ru_key, en_key, orig_key, dir):
+    first_row = ['Русс название', 'Англ название', 'Ориг название']
     rows = [first_row, ]
     for item in output:
         ru_name = item[ru_key].replace(',', '').replace(';', '')
         en_name = item[en_key].replace(',', '').replace(';', '')
         orig_name = item[orig_key].replace(',', '').replace(';', '')
-        mint_chaps = item[chap_key]
-        for re_item in item[re_items_key]:
-            re_chaps = re_item['chapters']
-            re_title_eng = re_item['title_eng'].replace(',', '').replace(';', '')
-            re_title_id = re_item['title_id']
-            re_title_dir = 'https://remanga.org/manga/' + re_item['dir']
-            rows.append([ru_name, en_name, orig_name, mint_chaps,
-                         re_chaps, re_title_eng, re_title_id, re_title_dir])
+        dir_href = item[dir].replace(',', '').replace(';', '')
+        rows.append([ru_name, en_name, orig_name, dir_href])
     logging.info(f'Saving data to output_{fetch_name}.csv...')
-    with open(f'output_{fetch_name}.csv', 'w', encoding='utf-8') as mint_out:
+    with open(f'output_{fetch_name}.csv', 'w', encoding="utf-8-sig", newline="") as mint_out:
         writer = csv.writer(mint_out, delimiter=';')
         writer.writerows(rows)
     logging.info('Data saved, sending document to users...')

@@ -130,30 +130,13 @@ class Fetch_mangalib(FetchBase):
                         og_name = self.driver.find_element(By.CSS_SELECTOR, '.media-info-list__value > div').text
                     except:
                         og_name = ''
-                    try:
-                        chapters = None
-                        items = self.driver.find_elements(By.CSS_SELECTOR, '.media-info-list__item')
-                        for lst_item in items:
-                            if 'глав' in lst_item.find_element(By.CSS_SELECTOR, '.media-info-list__title').text:
-                                chapters = int(lst_item.find_element(By.CSS_SELECTOR,
-                                                                     '.media-info-list__value').text)
-                        if not chapters:
-                            raise Exception()
-                    except:
-                        logging.warning(f"{link} - skipping, no chapters detected")
-                        continue
-                    result = await ReManga.find_remanga(en_name, session)
-                    items = await ReManga.compare_remanga_reverse(en_name, chapters, result,
-                                                                  required_rating=self.accuracy)
-                    if items:
-                        __new = {
-                            'ru_title': ru_name,
-                            'en_title': en_name,
-                            'og_title': og_name,
-                            'chapters': chapters,
-                            'remanga': items,
-                        }
-                        self.re_diff_items.append(__new)
+                    __new = {
+                        'ru_title': ru_name,
+                        'en_title': en_name,
+                        'og_title': og_name,
+                        'dir': link
+                    }
+                    self.re_diff_items.append(__new)
                 except Exception as e:
                     logging.error(f'{item["href"]} - error, skipping, message: {e}')
         logging.info(f'FETCH {self.fetch_name.upper()}: run stage complete')
@@ -169,6 +152,5 @@ class Fetch_mangalib(FetchBase):
             return
         logging.info(f'FETCH {self.fetch_name.upper()}: complete stage start')
         await send_data(self.re_diff_items, self.running, self.check_id, self.bot, self.fetch_name,
-                        ru_key='ru_title', en_key='en_title', orig_key='og_title',
-                        chap_key='chapters', re_items_key='remanga')
+                        ru_key='ru_title', en_key='en_title', orig_key='og_title', dir="dir")
         logging.info(f'FETCH {self.fetch_name.upper()}: complete stage complete')

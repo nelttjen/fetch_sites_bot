@@ -50,34 +50,12 @@ class Fetch_mangahub(FetchBase):
                     og_name = ''
                 except:
                     en_name, og_name = '', ''
-            result_2 = await send_request_multiple(session, link.replace('title', 'chapters'))
-            query_2 = pq.PyQuery(result_2)
-            __max = 0
-            items = list(query_2.find('.d-inline-flex > .text-truncate').items())
-            if len(items) == 0:
-                raise Exception('No chapters found')
-            for item in items:
-                text = item.text()
-                try:
-                    chapter_text = text.split('Глава ')[1]
-                except:
-                    continue
-                temp = ''
-                for i in chapter_text:
-                    if i in '0123456789':
-                        temp += i
-                    else:
-                        break
-                try:
-                    chap_int = int(temp)
-                    __max = max(chap_int, __max)
-                except ValueError:
-                    continue
+
             new_item = {
                 'title_ru': ru_name,
                 'title_en': en_name,
                 'title_og': og_name,
-                'chapters': __max
+                'dir': link
             }
             self.prepare_items.append(new_item)
         except Exception as e:
@@ -98,19 +76,6 @@ class Fetch_mangahub(FetchBase):
         except:
             return False
 
-    async def proceed_remanga(self, item, sesssion):
-        try:
-            name = item.get('title_en')
-            chapter = item.get('chapters')
-            re_query = await ReManga.find_remanga(name, sesssion)
-            re_items = await ReManga.compare_remanga_reverse(name, chapter, re_query, required_rating=self.accuracy)
-            if re_items:
-                __copy = copy.deepcopy(item)
-                __copy['remanga'] = re_items
-                self.re_diff_items.append(__copy)
-        finally:
-            self.fetches += 1
-
     async def prepare(self):
         logging.info(f'FETCH {self.fetch_name.upper()}: prepare stage start')
         async with aiohttp.ClientSession(headers=headers) as session:
@@ -129,17 +94,11 @@ class Fetch_mangahub(FetchBase):
 
     async def run(self):
         logging.info(f'FETCH {self.fetch_name.upper()}: run stage start')
-        async with aiohttp.ClientSession(headers=headers) as session:
-            for item in self.prepare_items:
-                asyncio.create_task(self.proceed_remanga(item, session))
-                await asyncio.sleep(0.3)
-            while self.fetches != len(self.prepare_items):
-                await asyncio.sleep(3)
         logging.info(f'FETCH {self.fetch_name.upper()}: run stage complete')
 
     async def complete(self):
         logging.info(f'FETCH {self.fetch_name.upper()}: complete stage start')
-        await send_data(self.re_diff_items, self.running, self.check_id, self.bot,
+        await send_data(self.prepare_items, self.running, self.check_id, self.bot,
                         self.fetch_name, ru_key='title_ru', en_key='title_en', orig_key='title_og',
-                        chap_key='chapters', re_items_key='remanga')
+                        dir="dir")
         logging.info(f'FETCH {self.fetch_name.upper()}: complete stage complete')

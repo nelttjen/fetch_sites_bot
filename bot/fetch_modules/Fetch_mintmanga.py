@@ -40,7 +40,6 @@ class Fetch_mintmanga(FetchBase):
         self.items_response.append(result)
 
     async def fetch_single_manga(self, session, url):
-        chapters = []
         try:
             result = await send_request_multiple(session, url)
             if result:
@@ -48,31 +47,14 @@ class Fetch_mintmanga(FetchBase):
                 name = query.find('.names > .name').text()
                 en_name = query.find('.names > .eng-name').text()
                 original_name = query.find('.names > .original-name').text()
-                chapters = list(i.text() for i in query.find('td.item-title > a').items())
-                all_chaps = []
-                for chap in chapters:
-                    res = chap.split(' - ')
-                    actual_chap = ''
-                    if len(res) == 2:
-                        for i in res[1]:
-                            if i in '0123456789':
-                                actual_chap += i
-                            else:
-                                break
-                        try:
-                            actual_chap = int(actual_chap)
-                        except ValueError:
-                            continue
-                        all_chaps.append(actual_chap)
+
                 manga_item = {
                     'ru_title': name,
                     'en_title': en_name,
                     'orig_title': original_name,
-                    'max_chapter': max(all_chaps)
+                    'dir': url
                 }
-                result = await self.proceed_remanga_reverse(manga_item, session, rating=self.accuracy)
-                if result:
-                    self.output.append(result)
+                self.output.append(manga_item)
                 self.fetches += 1
             else:
                 raise Exception('No result were got from server')
@@ -80,37 +62,11 @@ class Fetch_mintmanga(FetchBase):
             logging.error(f'{url} fetching - error, skipping. Error: {e}')
             self.fetches += 1
 
-    @staticmethod
-    async def proceed_remanga(item, session):
-        titles_all = [item['en_title'], item['ru_title'], item['orig_title']]
-        title = item['en_title'] or item['ru_title'] or item['orig_title']
-        max_chap = item['max_chapter']
-        find_result = await ReManga.find_remanga(title, session)
-        proceed_result = await ReManga.compare_remanga(titles_all, max_chap, find_result)
-        if proceed_result:
-            new_item = copy.deepcopy(item)
-            new_item['remanga_data'] = proceed_result
-            # logging.info(new_item)
-            return new_item
-        return
-
-    @staticmethod
-    async def proceed_remanga_reverse(item, session, rating=0.51):
-        title = item['en_title']
-        max_chap = item['max_chapter']
-        find_result = await ReManga.find_remanga(title, session)
-        proceed_result = await ReManga.compare_remanga_reverse(title, max_chap, find_result, required_rating=rating)
-        if proceed_result:
-            new_item = copy.deepcopy(item)
-            new_item['remanga_data'] = proceed_result
-            # logging.info(new_item) if DEBUG else None
-            return new_item
-        return
-
     async def prepare(self):
         logging.info(f'FETCH {self.fetch_name.upper()}: prepare stage start')
         async with aiohttp.ClientSession(headers=headers) as session:
             result = await send_request_multiple(session, self.endpoint.format(0))
+            print(result)
             query = pq.PyQuery(result)
             item_count = int(list(query.find('.pagination > .step').items())[-1].text())
             actual = item_count if not DEBUG else 1
@@ -142,8 +98,7 @@ class Fetch_mintmanga(FetchBase):
     async def complete(self):
         logging.info(f'FETCH {self.fetch_name.upper()}: complete stage start')
         await send_data(self.output, self.running, self.check_id, self.bot, self.fetch_name,
-                        ru_key='ru_title', en_key='en_title', orig_key='orig_title',
-                        chap_key='max_chapter', re_items_key='remanga_data')
+                        ru_key='ru_title', en_key='en_title', orig_key='orig_title', dir="dir") 
         logging.info(f'FETCH {self.fetch_name.upper()}: complete stage complete')
 
     # async def execute(self):

@@ -7,3 +7,5 @@ from .Fetch_mangaovh import Fetch_mangaovh
 
 from .Fetch_mangalib import Fetch_mangalib
 from .Fetch_yaoilib import Fetch_yaoilib
+from .Fetch_hentailib import Fetch_hentailib
+from .Fetch_shikimori import Fetch_shikimori

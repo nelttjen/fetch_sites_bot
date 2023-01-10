@@ -25,7 +25,7 @@ def check_user_access(user_id: int) -> bool:
 
 def default_running_dict():
     new_dict = dict()
-    for i in range(1, 10):
+    for i in range(1, 11):
         new_dict[i] = {
             'is_running': False,
             'users': []
@@ -50,6 +50,8 @@ class Fetches:
             6: Fetches.fetch_6,
             7: Fetches.fetch_7,
             8: Fetches.fetch_8,
+            9: Fetches.fetch_9,
+            10: Fetches.fetch_10
         }
         func = operations.get(check_id)
         if not func:
@@ -105,3 +107,11 @@ class Fetches:
     @staticmethod
     async def fetch_8(check_id, bot, running):
         await Fetches.fetch_base(check_id, bot, running, Fetch_mangaovh, name='mangachan')
+        
+    @staticmethod
+    async def fetch_9(check_id, bot, running):
+        await Fetches.fetch_base(check_id, bot, running, Fetch_hentailib, name='hentailib')
+
+    @staticmethod
+    async def fetch_10(check_id, bot, running):
+        await Fetches.fetch_base(check_id, bot, running, Fetch_shikimori, name='shikimori')
