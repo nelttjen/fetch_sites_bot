@@ -17,6 +17,8 @@ class States(StatesGroup):
 
     mangalib = State()
     yaoilib = State()
+    hentailib = State()
+    shikimori = State()
 
 
 running = default_running_dict()
@@ -69,6 +71,7 @@ async def add_by_user_id(message: types.Message, state: FSMContext):
 @dispatcher.message_handler(commands='/fetch_7', state='*')
 @dispatcher.message_handler(commands='/fetch_8', state='*')
 @dispatcher.message_handler(commands='/fetch_9', state='*')
+@dispatcher.message_handler(commands='/fetch_10', state='*')
 @dispatcher.message_handler(Text(equals='mintmanga.live', ignore_case=True), state='*')
 @dispatcher.message_handler(Text(equals='readmanga.live', ignore_case=True), state='*')
 @dispatcher.message_handler(Text(equals='mangalib.me', ignore_case=True), state='*')
@@ -77,6 +80,8 @@ async def add_by_user_id(message: types.Message, state: FSMContext):
 @dispatcher.message_handler(Text(equals='mangachan.ru', ignore_case=True), state='*')
 @dispatcher.message_handler(Text(equals='mangahub.ru', ignore_case=True), state='*')
 @dispatcher.message_handler(Text(equals='manga.ovh', ignore_case=True), state='*')
+@dispatcher.message_handler(Text(equals='hentailib.me', ignore_case=True), state='*')
+@dispatcher.message_handler(Text(equals='shikimori.one', ignore_case=True), state='*')
 @dispatcher.message_handler(Text(equals='Все', ignore_case=True), state='*')
 @login_required
 async def method_call(message: types.Message):
@@ -89,7 +94,9 @@ async def method_call(message: types.Message):
         'mangachan.ru': 6,
         'mangahub.ru': 7,
         'manga.ovh': 8,
-        'Все': 9
+        'hentailib.me': 9,
+        'shikimori.one': 10,
+        'Все': 11
     }
     if message.text.startswith('/fetch_'):
         check_id = int(message.text.replace('/fetch_', ''))
@@ -97,8 +104,13 @@ async def method_call(message: types.Message):
         check_id = all_operations[message.text]
     user_id = message.from_user.id
 
-    if check_id in (3, 4):
-        state = States.mangalib if check_id == 3 else States.yaoilib
+    if check_id in (3, 4, 9):
+        if check_id == 3:
+            state = States.mangalib
+        if check_id == 4:
+            state = States.yaoilib
+        if check_id == 9: 
+            state = States.hentailib
         await message.reply(f'Вы уверены, что хотите запустить проверку {message.text}? '
                             f'Во время выполнения бот может подвисать и долго не реагировать на сообщения.'
                             f'Проверка происходит драйвером Chrome, проверьте, чтобы он был установлен и помещен в '
@@ -109,9 +121,9 @@ async def method_call(message: types.Message):
         return
 
     global running
-    if check_id == 9:
+    if check_id == 11:
         for key, val in all_operations.items():
-            if val == 9 or val in [3, 4]:
+            if val == 11 or val in [3, 4, 9]:
                 continue
             result = await Fetches.create_task_fetch(running, val, user_id, bot, name=key)
             await message.reply(result)
@@ -145,4 +157,17 @@ async def execute_mangalib(message: types.Message, state: FSMContext):
         return
     await state.finish()
     result = await Fetches.create_task_fetch(running, 4, message.from_user.id, bot, name='yaoilib.me')
+    await message.reply(result, reply_markup=get_start_keyboard())
+
+@dispatcher.message_handler(state=States.hentailib)
+@login_required_state
+async def execute_mangalib(message: types.Message, state: FSMContext):
+    if message.text not in ('Подтвердить', 'Вернуться назад'):
+        await message.reply('Неизвестная операция')
+        return
+    if message.text == 'Вернуться назад':
+        await message.reply('Главное меню', reply_markup=get_start_keyboard())
+        return
+    await state.finish()
+    result = await Fetches.create_task_fetch(running, 9, message.from_user.id, bot, name='hentailib.me')
     await message.reply(result, reply_markup=get_start_keyboard())

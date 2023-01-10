@@ -44,29 +44,16 @@ class Fetch_mangachan(FetchBase):
                 names = item.find('a.title_link').text()
                 name_en = names.split('(')[0].strip().replace("'s", '')
                 name_ru = names.split('(')[1].replace(')', '')
-                chapter = int(item.find('.item2 > span > b').text().replace(' глав', ''))
+                dir = item.find('.title_link').attr('href')
                 self.prepare_items.append({
                     'title_ru': name_ru,
                     'title_en': name_en,
                     'title_og': '',
-                    'chapter': chapter
+                    'dir': dir
                 })
             return True
         except:
             return False
-
-    async def proceed_remanga(self, item, sesssion):
-        try:
-            name = item.get('title_en')
-            chapter = item.get('chapter')
-            re_query = await ReManga.find_remanga(name, sesssion)
-            re_items = await ReManga.compare_remanga_reverse(name, chapter, re_query, required_rating=self.accuracy)
-            if re_items:
-                __copy = copy.deepcopy(item)
-                __copy['remanga'] = re_items
-                self.re_diff_items.append(__copy)
-        finally:
-            self.fetches += 1
 
     async def prepare(self):
         logging.info(f'FETCH {self.fetch_name.upper()}: prepare stage start')
@@ -88,17 +75,10 @@ class Fetch_mangachan(FetchBase):
 
     async def run(self):
         logging.info(f'FETCH {self.fetch_name.upper()}: run stage start')
-        async with aiohttp.ClientSession(headers=headers) as session:
-            for item in self.prepare_items:
-                asyncio.create_task(self.proceed_remanga(item, session))
-                await asyncio.sleep(0.3)
-            while self.fetches != len(self.prepare_items):
-                await asyncio.sleep(3)
         logging.info(f'FETCH {self.fetch_name.upper()}: run stage complete')
 
     async def complete(self):
         logging.info(f'FETCH {self.fetch_name.upper()}: complete stage start')
-        await send_data(self.re_diff_items, self.running, self.check_id, self.bot,
-                        self.fetch_name, ru_key='title_ru', en_key='title_en', orig_key='title_og',
-                        chap_key='chapter', re_items_key='remanga')
+        await send_data(self.prepare_items, self.running, self.check_id, self.bot,
+                        self.fetch_name, ru_key='title_ru', en_key='title_en', orig_key='title_og', dir='dir')
         logging.info(f'FETCH {self.fetch_name.upper()}: complete stage complete')
